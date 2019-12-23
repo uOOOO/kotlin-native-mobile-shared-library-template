@@ -14,9 +14,6 @@ plugins {
     id("maven-publish")
 }
 
-group = "com.example"
-version = "0.0.1"
-
 android {
     compileSdkVersion(Version.Android.compileSdkVersion)
     defaultConfig {
@@ -43,9 +40,20 @@ android {
     }
 }
 
+group = property("group") as String
+version = property("version") as String
+
 kotlin {
+    val artifactId: String by project
+    val buildType = (project.findProperty("buildType") as? String ?: "debug").let {
+        if ("debug" != it && "release" != it) {
+            throw GradleException("Invalid buildType \"$it\". Please select debug or release.")
+        }
+        it
+    }
+
     android("android") {
-        publishLibraryVariants("debug")
+        publishLibraryVariants(buildType)
     }
     // Create and configure the targets.
     val iosX64 = iosX64("ios")
@@ -54,22 +62,22 @@ kotlin {
 
     configure(listOf(iosX64, iosArm32, iosArm64)) {
         binaries.framework {
-            baseName = "TemplateFramework"
+            baseName = artifactId.capitalize()
         }
     }
     // Create a task building a fat framework.
-    tasks.create("debugFatFramework", FatFrameworkTask::class) {
+    tasks.create("fatFramework", FatFrameworkTask::class) {
         // The fat framework must have the same base name as the initial frameworks.
-        baseName = "TemplateFramework"
+        baseName = artifactId.capitalize()
 
         // The default destination directory is '<build directory>/fat-framework'.
-        destinationDir = file("$buildDir/fat-framework/debug")
+        destinationDir = file("$buildDir/fat-framework/$buildType")
 
         // Specify the frameworks to be merged.
         from(
-            iosX64.binaries.getFramework("DEBUG"),
-            iosArm32.binaries.getFramework("DEBUG"),
-            iosArm64.binaries.getFramework("DEBUG")
+            iosX64.binaries.getFramework(buildType),
+            iosArm32.binaries.getFramework(buildType),
+            iosArm64.binaries.getFramework(buildType)
         )
     }
     sourceSets {
@@ -106,6 +114,21 @@ kotlin {
             getByName("ios64Test").dependsOn(this)
         }
     }
+
+    afterEvaluate {
+        tasks.findByName("test")?.finalizedBy(tasks.findByName("iosTest"))
+
+        publishing.publications.all {
+            (this as MavenPublication).apply {
+                this.artifactId = artifactId.toLowerCase()
+                if (name != "kotlinMultiplatform") {
+                    this.artifactId =
+                        "${artifactId.toLowerCase()}-${name.replace(Regex("${buildType.capitalize()}$$"), "")}"
+                }
+                this.version = version + if (buildType == "debug") "-SNAPSHOT" else ""
+            }
+        }
+    }
 }
 
 tasks.register("iosTest") {
@@ -129,8 +152,4 @@ tasks.register("iosTest") {
             }
         }
     }
-}
-
-afterEvaluate {
-    tasks.findByName("test")?.finalizedBy(tasks.findByName("iosTest"))
 }
