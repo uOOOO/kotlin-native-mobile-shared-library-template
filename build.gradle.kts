@@ -44,7 +44,9 @@ android {
 }
 
 kotlin {
-    android("android")
+    android("android") {
+        publishLibraryVariants("debug")
+    }
     // Create and configure the targets.
     val iosX64 = iosX64("ios")
     val iosArm32 = iosArm32("ios32")
