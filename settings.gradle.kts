@@ -1,4 +1,4 @@
-rootProject.name = "Mobile_Shared_Library_Template"
+rootProject.name = "Kotlin_Native_Mobile_Shared_Library_Template"
 enableFeaturePreview("GRADLE_METADATA")
 pluginManagement {
     resolutionStrategy {
