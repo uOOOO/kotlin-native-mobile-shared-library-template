@@ -130,3 +130,7 @@ tasks.register("iosTest") {
         }
     }
 }
+
+afterEvaluate {
+    tasks.findByName("test")?.finalizedBy(tasks.findByName("iosTest"))
+}
