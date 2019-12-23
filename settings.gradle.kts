@@ -4,7 +4,7 @@ pluginManagement {
     resolutionStrategy {
         eachPlugin {
             if (requested.id.id == "com.android.library") {
-                useModule("com.android.tools.build:gradle:3.5.3")
+                useModule("com.android.tools.build:gradle:${Version.agp}")
             }
         }
     }

@@ -5,14 +5,12 @@ repositories {
     google()
     jcenter()
     mavenCentral()
-    maven("https://dl.bintray.com/kotlin/kotlin-dev")
-    maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
 
 plugins {
-    kotlin("multiplatform") version "1.3.61"
+    kotlin("multiplatform") version Version.kotlin
     id("com.android.library")
-    kotlin("android.extensions") version "1.3.61"
+    kotlin("android.extensions") version Version.kotlin
     id("maven-publish")
 }
 
@@ -20,10 +18,10 @@ group = "com.example"
 version = "0.0.1"
 
 android {
-    compileSdkVersion(28)
+    compileSdkVersion(Version.Android.compileSdkVersion)
     defaultConfig {
-        minSdkVersion(21)
-        targetSdkVersion(28)
+        minSdkVersion(Version.Android.minSdkVersion)
+        targetSdkVersion(Version.Android.targetSdkVersion)
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -87,8 +85,8 @@ kotlin {
         getByName("androidMain") {
             dependencies {
                 implementation(kotlin("stdlib"))
-                implementation("androidx.appcompat:appcompat:1.1.0")
-                implementation("androidx.core:core-ktx:1.1.0")
+                implementation("androidx.appcompat:appcompat:${Version.appcompat}")
+                implementation("androidx.core:core-ktx:${Version.coreKtx}")
             }
         }
         getByName("androidTest") {
