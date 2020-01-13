@@ -20,7 +20,7 @@ ex) if buildType is release,
 The result is in ${ROOT_PROJECT_DIR}/build/bin/fat-framework/${buildType}
 ```
 
-And you can set group, artifactId and version manually. They are in gradle.properties.
+And you can set groupId, artifactId and version manually in ${ROOT_PROJECT_DIR}/gradle.properties.
 
 ## TODO
 - Upload artifact to repository

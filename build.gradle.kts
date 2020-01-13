@@ -40,45 +40,25 @@ android {
     }
 }
 
-group = property("group") as String
+group = property("groupId") as String
 version = property("version") as String
+val artifactId by lazy { property("artifactId") as String }
+val buildType by lazy {
+    (project.findProperty("buildType") as? String ?: "debug").apply {
+        if ("debug" != this && "release" != this) {
+            throw GradleException("Invalid buildType \"$this\". Please select debug or release.")
+        }
+    }
+}
 
 kotlin {
-    val artifactId: String by project
-    val buildType = (project.findProperty("buildType") as? String ?: "debug").let {
-        if ("debug" != it && "release" != it) {
-            throw GradleException("Invalid buildType \"$it\". Please select debug or release.")
-        }
-        it
-    }
-
-    android("android") {
+    android {
         publishLibraryVariants(buildType)
     }
-    // Create and configure the targets.
-    val iosX64 = iosX64("ios")
-    val iosArm32 = iosArm32("ios32")
-    val iosArm64 = iosArm64("ios64")
-
-    configure(listOf(iosX64, iosArm32, iosArm64)) {
+    configure(listOf(iosX64("ios"), iosArm32(), iosArm64())) {
         binaries.framework {
             baseName = artifactId.capitalize()
         }
-    }
-    // Create a task building a fat framework.
-    tasks.create("fatFramework", FatFrameworkTask::class) {
-        // The fat framework must have the same base name as the initial frameworks.
-        baseName = artifactId.capitalize()
-
-        // The default destination directory is '<build directory>/fat-framework'.
-        destinationDir = file("$buildDir/fat-framework/$buildType")
-
-        // Specify the frameworks to be merged.
-        from(
-            iosX64.binaries.getFramework(buildType),
-            iosArm32.binaries.getFramework(buildType),
-            iosArm64.binaries.getFramework(buildType)
-        )
     }
     sourceSets {
         getByName("commonMain") {
@@ -106,27 +86,12 @@ kotlin {
             }
         }
         getByName("iosMain") {
-            getByName("ios32Main").dependsOn(this)
-            getByName("ios64Main").dependsOn(this)
+            getByName("iosArm32Main").dependsOn(this)
+            getByName("iosArm64Main").dependsOn(this)
         }
         getByName("iosTest") {
-            getByName("ios32Test").dependsOn(this)
-            getByName("ios64Test").dependsOn(this)
-        }
-    }
-
-    afterEvaluate {
-        tasks.findByName("test")?.finalizedBy(tasks.findByName("iosTest"))
-
-        publishing.publications.all {
-            (this as MavenPublication).apply {
-                this.artifactId = artifactId.toLowerCase()
-                if (name != "kotlinMultiplatform") {
-                    this.artifactId =
-                        "${artifactId.toLowerCase()}-${name.replace(Regex("${buildType.capitalize()}$$"), "")}"
-                }
-                this.version = version + if (buildType == "debug") "-SNAPSHOT" else ""
-            }
+            getByName("iosArm32Test").dependsOn(this)
+            getByName("iosArm64Test").dependsOn(this)
         }
     }
 }
@@ -152,4 +117,31 @@ tasks.register("iosTest") {
             }
         }
     }
+}
+
+// Create a task building a fat framework.
+tasks.register("fatFramework", FatFrameworkTask::class) {
+    // The fat framework must have the same base name as the initial frameworks.
+    baseName = artifactId.capitalize()
+
+    // The default destination directory is '<build directory>/fat-framework'.
+    destinationDir = file("$buildDir/fat-framework/$buildType")
+
+    // Specify the frameworks to be merged.
+    from(kotlin.targets.filter { it.name.startsWith("ios") }
+        .map { it as KotlinNativeTarget }
+        .map { it.binaries.getFramework(buildType) })
+}
+
+tasks.findByName("test")?.finalizedBy(tasks.findByName("iosTest"))
+
+afterEvaluate {
+    publishing.publications
+        .filter { it.name != "kotlinMultiplatform" }
+        .map { it as MavenPublication }
+        .forEach {
+            it.version += if (buildType == "debug") "-SNAPSHOT" else ""
+            it.artifactId =
+                "${artifactId.toLowerCase()}-${it.name.replace(Regex("${buildType.capitalize()}$$"), "")}"
+        }
 }
