@@ -5,6 +5,8 @@ pluginManagement {
         eachPlugin {
             if (requested.id.id == "com.android.library") {
                 useModule("com.android.tools.build:gradle:${Version.agp}")
+            } else if (requested.id.id == "com.squareup.sqldelight") {
+                useModule("com.squareup.sqldelight:gradle-plugin:${Version.sqlDelight}")
             }
         }
     }

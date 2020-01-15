@@ -1,0 +1,14 @@
+
+CREATE TABLE Sample(
+id INTEGER NOT NULL PRIMARY KEY,
+data TEXT NOT NULL
+);
+
+insertItem:
+INSERT OR REPLACE INTO Sample(id, data)VALUES(?,?);
+
+selectAll:
+SELECT * FROM Sample;
+
+selectById:
+SELECT * FROM Sample WHERE id = ?;

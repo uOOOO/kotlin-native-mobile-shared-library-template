@@ -12,12 +12,12 @@ ex) if buildType is debug,
 
 - iOS Fat Framework (X64 + arm32 + arm64)
 ```shell script
-./gradlew -PbuildType=${buildType} fatFramework
+./gradlew -PbuildType=${buildType} linkFatFrameworkIos
 
 ex) if buildType is release,
-./gradlew -PbuildType=release fatFramework
+./gradlew -PbuildType=release linkFatFrameworkIos
 
-The result is in ${ROOT_PROJECT_DIR}/build/bin/fat-framework/${buildType}
+The result is in ${ROOT_PROJECT_DIR}/build/bin/iosFat/${buildType}
 ```
 
 And you can set groupId, artifactId and version manually in ${ROOT_PROJECT_DIR}/gradle.properties.

@@ -12,6 +12,7 @@ plugins {
     id("com.android.library")
     kotlin("android.extensions") version Version.kotlin
     id("maven-publish")
+    id("com.squareup.sqldelight")
 }
 
 android {
@@ -43,6 +44,7 @@ android {
 group = property("groupId") as String
 version = property("version") as String
 val artifactId by lazy { property("artifactId") as String }
+val frameworkId by lazy { property("frameworkId") as String }
 val buildType by lazy {
     (project.findProperty("buildType") as? String ?: "debug").apply {
         if ("debug" != this && "release" != this) {
@@ -57,13 +59,17 @@ kotlin {
     }
     configure(listOf(iosX64("ios"), iosArm32(), iosArm64())) {
         binaries.framework {
-            baseName = artifactId.capitalize()
+            baseName = frameworkId
         }
     }
     sourceSets {
         getByName("commonMain") {
             dependencies {
                 implementation(kotlin("stdlib-common"))
+                implementation("io.ktor:ktor-client-core:${Version.ktor}")
+                implementation("org.kodein.di:kodein-di-erased:${Version.kodein}")
+                implementation("com.squareup.sqldelight:runtime:${Version.sqlDelight}")
+//                implementation("com.squareup.sqldelight:coroutines-extensions:${Version.sqlDelight}")
             }
         }
         getByName("commonTest") {
@@ -77,6 +83,9 @@ kotlin {
                 implementation(kotlin("stdlib"))
                 implementation("androidx.appcompat:appcompat:${Version.appcompat}")
                 implementation("androidx.core:core-ktx:${Version.coreKtx}")
+                implementation("io.ktor:ktor-client-android:${Version.ktor}")
+                implementation("com.squareup.sqldelight:android-driver:${Version.sqlDelight}")
+//                implementation("com.squareup.sqldelight:coroutines-extensions-jvm:${Version.sqlDelight}")
             }
         }
         getByName("androidTest") {
@@ -86,6 +95,10 @@ kotlin {
             }
         }
         getByName("iosMain") {
+            dependencies {
+                implementation("io.ktor:ktor-client-ios:${Version.ktor}")
+                implementation("com.squareup.sqldelight:ios-driver:${Version.sqlDelight}")
+            }
             getByName("iosArm32Main").dependsOn(this)
             getByName("iosArm64Main").dependsOn(this)
         }
@@ -120,12 +133,12 @@ tasks.register("iosTest") {
 }
 
 // Create a task building a fat framework.
-tasks.register("fatFramework", FatFrameworkTask::class) {
+tasks.register("linkFatFrameworkIos", FatFrameworkTask::class) {
     // The fat framework must have the same base name as the initial frameworks.
-    baseName = artifactId.capitalize()
+    baseName = frameworkId
 
-    // The default destination directory is '<build directory>/fat-framework'.
-    destinationDir = file("$buildDir/fat-framework/$buildType")
+    // The default destination directory is '<build directory>/bin/iosFat'.
+    destinationDir = file("$buildDir/bin/iosFat/${buildType}Framework")
 
     // Specify the frameworks to be merged.
     from(kotlin.targets.filter { it.name.startsWith("ios") }
@@ -144,4 +157,13 @@ afterEvaluate {
             it.artifactId =
                 "${artifactId.toLowerCase()}-${it.name.replace(Regex("${buildType.capitalize()}$$"), "")}"
         }
+}
+
+// https://cashapp.github.io/sqldelight/gradle/
+sqldelight {
+    database("ThisDatabase") {
+        packageName = "${group}.db"
+        sourceFolders = listOf("sqldelight")
+        schemaOutputDirectory = file("$buildDir/sqldelight")
+    }
 }
