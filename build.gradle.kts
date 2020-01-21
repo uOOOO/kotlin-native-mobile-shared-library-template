@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.FatFrameworkTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 repositories {
     google()
@@ -38,6 +39,10 @@ android {
             java.srcDirs("src/androidTest/kotlin")
             res.srcDirs("src/androidTest/res")
         }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
 
@@ -84,6 +89,7 @@ kotlin {
                 implementation("androidx.appcompat:appcompat:${Version.appcompat}")
                 implementation("androidx.core:core-ktx:${Version.coreKtx}")
                 implementation("io.ktor:ktor-client-android:${Version.ktor}")
+                implementation("org.kodein.di:kodein-di-conf:${Version.kodein}")
                 implementation("com.squareup.sqldelight:android-driver:${Version.sqlDelight}")
 //                implementation("com.squareup.sqldelight:coroutines-extensions-jvm:${Version.sqlDelight}")
             }
@@ -161,6 +167,12 @@ afterEvaluate {
 
 tasks.withType<GenerateModuleMetadata> {
     enabled = false
+}
+
+tasks.withType(KotlinCompile::class).all {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString() // "1.8"
+    }
 }
 
 // https://cashapp.github.io/sqldelight/gradle/
