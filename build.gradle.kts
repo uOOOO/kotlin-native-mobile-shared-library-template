@@ -159,6 +159,10 @@ afterEvaluate {
         }
 }
 
+tasks.withType<GenerateModuleMetadata> {
+    enabled = false
+}
+
 // https://cashapp.github.io/sqldelight/gradle/
 sqldelight {
     database("ThisDatabase") {
