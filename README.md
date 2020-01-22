@@ -23,5 +23,6 @@ The result is in ${ROOT_PROJECT_DIR}/build/bin/iosFat/${buildType}
 And you can set groupId, artifactId and version manually in ${ROOT_PROJECT_DIR}/gradle.properties.
 
 ## TODO
+- Expose only network request methods instead of presenter or view model of MV* patterns (ktor supports only coroutine call)
 - Upload artifact to repository
 - And more...
