@@ -33,12 +33,6 @@ android {
     sourceSets {
         getByName("main") {
             manifest.srcFile("src/androidMain/AndroidManifest.xml")
-            java.srcDirs("src/androidMain/kotlin")
-            res.srcDirs("src/androidMain/res")
-        }
-        getByName("androidTest") {
-            java.srcDirs("src/androidTest/kotlin")
-            res.srcDirs("src/androidTest/res")
         }
     }
     compileOptions {
