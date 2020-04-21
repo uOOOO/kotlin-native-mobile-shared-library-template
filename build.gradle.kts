@@ -157,7 +157,7 @@ tasks.register("linkFatFrameworkIos", FatFrameworkTask::class) {
         .map { it.binaries.getFramework(buildType) })
 }
 
-tasks.findByName("iosTest")?.finalizedBy(tasks.findByName("iosTestOnSim"))
+//tasks.findByName("iosTest")?.finalizedBy(tasks.findByName("iosTestOnSim"))
 
 afterEvaluate {
     publishing.publications
