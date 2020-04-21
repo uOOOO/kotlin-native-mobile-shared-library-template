@@ -6,6 +6,7 @@ repositories {
     google()
     jcenter()
     mavenCentral()
+    maven(url = "https://dl.bintray.com/badoo/maven")
 }
 
 plugins {
@@ -44,6 +45,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    packagingOptions {
+        exclude("META-INF/ktor-http.kotlin_module")
+    }
 }
 
 group = property("groupId") as String
@@ -60,62 +64,63 @@ val buildType by lazy {
 
 kotlin {
     android {
-        publishLibraryVariants(buildType)
+        publishLibraryVariants("debug", "release")
     }
-    configure(listOf(iosX64("ios"), iosArm32(), iosArm64())) {
+    configure(listOf(iosX64("ios"), iosArm64())) {
         binaries.framework {
             baseName = frameworkId
         }
     }
     sourceSets {
-        getByName("commonMain") {
-            dependencies {
-                implementation(kotlin("stdlib-common"))
-                implementation("io.ktor:ktor-client-core:${Version.ktor}")
-                implementation("org.kodein.di:kodein-di-erased:${Version.kodein}")
-                implementation("com.squareup.sqldelight:runtime:${Version.sqlDelight}")
-//                implementation("com.squareup.sqldelight:coroutines-extensions:${Version.sqlDelight}")
-            }
+        getByName("commonMain").dependencies {
+            implementation(kotlin("stdlib-common"))
+            // ktor
+            implementation("io.ktor:ktor-client-core:${Version.ktor}")
+            // kodein
+            implementation("org.kodein.di:kodein-di-erased:${Version.kodein}")
+            // sqldelight
+            implementation("com.squareup.sqldelight:runtime:${Version.sqlDelight}")
+            implementation("com.squareup.sqldelight:coroutines-extensions:${Version.sqlDelight}")
+            // reaktive
+            implementation("com.badoo.reaktive:reaktive:${Version.reaktive}")
+            implementation("com.badoo.reaktive:coroutines-interop:${Version.reaktive}")
         }
-        getByName("commonTest") {
-            dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
-            }
+        getByName("commonTest").dependencies {
+            implementation(kotlin("test-common"))
+            implementation(kotlin("test-annotations-common"))
+            // reaktive
+            implementation("com.badoo.reaktive:reaktive-testing:${Version.reaktive}")
         }
-        getByName("androidMain") {
-            dependencies {
-                implementation(kotlin("stdlib"))
-                implementation("androidx.appcompat:appcompat:${Version.appcompat}")
-                implementation("androidx.core:core-ktx:${Version.coreKtx}")
-                implementation("io.ktor:ktor-client-android:${Version.ktor}")
-                implementation("org.kodein.di:kodein-di-conf:${Version.kodein}")
-                implementation("com.squareup.sqldelight:android-driver:${Version.sqlDelight}")
-//                implementation("com.squareup.sqldelight:coroutines-extensions-jvm:${Version.sqlDelight}")
-            }
+        getByName("androidMain").dependencies {
+            implementation(kotlin("stdlib"))
+            // android
+            implementation("androidx.appcompat:appcompat:${Version.appcompat}")
+            implementation("androidx.core:core-ktx:${Version.coreKtx}")
+            // ktor
+            implementation("io.ktor:ktor-client-android:${Version.ktor}")
+            // kodein
+            implementation("org.kodein.di:kodein-di-conf:${Version.kodein}")
+            // sqldelight
+            implementation("com.squareup.sqldelight:android-driver:${Version.sqlDelight}")
+            implementation("com.squareup.sqldelight:android-paging-extensions:${Version.sqlDelight}")
         }
-        getByName("androidTest") {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation(kotlin("test-junit"))
-            }
+        getByName("androidTest").dependencies {
+            implementation(kotlin("test"))
+            implementation(kotlin("test-junit"))
         }
         getByName("iosMain") {
             dependencies {
+                // ktor
                 implementation("io.ktor:ktor-client-ios:${Version.ktor}")
-                implementation("com.squareup.sqldelight:ios-driver:${Version.sqlDelight}")
+                // sqldelight
+                implementation("com.squareup.sqldelight:native-driver:${Version.sqlDelight}")
             }
-            getByName("iosArm32Main").dependsOn(this)
             getByName("iosArm64Main").dependsOn(this)
-        }
-        getByName("iosTest") {
-            getByName("iosArm32Test").dependsOn(this)
-            getByName("iosArm64Test").dependsOn(this)
         }
     }
 }
 
-tasks.register("iosTest") {
+tasks.register("iosTestOnSim") {
     val device = project.findProperty("iosDevice") as? String ?: "iPhone 8"
     dependsOn("linkDebugTestIos")
     group = JavaBasePlugin.VERIFICATION_GROUP
@@ -143,30 +148,22 @@ tasks.register("linkFatFrameworkIos", FatFrameworkTask::class) {
     // The fat framework must have the same base name as the initial frameworks.
     baseName = frameworkId
 
-    // The default destination directory is '<build directory>/bin/iosFat'.
+// The default destination directory is '<build directory>/bin/iosFat'.
     destinationDir = file("$buildDir/bin/iosFat/${buildType}Framework")
 
-    // Specify the frameworks to be merged.
+// Specify the frameworks to be merged.
     from(kotlin.targets.filter { it.name.startsWith("ios") }
         .map { it as KotlinNativeTarget }
         .map { it.binaries.getFramework(buildType) })
 }
 
-tasks.findByName("test")?.finalizedBy(tasks.findByName("iosTest"))
+tasks.findByName("iosTest")?.finalizedBy(tasks.findByName("iosTestOnSim"))
 
 afterEvaluate {
     publishing.publications
-        .filter { it.name != "kotlinMultiplatform" }
+//        .filter { it.name != "kotlinMultiplatform" }
         .map { it as MavenPublication }
-        .forEach {
-            it.version += if (buildType == "debug") "-SNAPSHOT" else ""
-            it.artifactId =
-                "${artifactId.toLowerCase()}-${it.name.replace(Regex("${buildType.capitalize()}$$"), "")}"
-        }
-}
-
-tasks.withType<GenerateModuleMetadata> {
-    enabled = false
+        .forEach { it.artifactId = it.artifactId.replace(project.name, artifactId).toLowerCase() }
 }
 
 tasks.withType(KotlinCompile::class).all {
