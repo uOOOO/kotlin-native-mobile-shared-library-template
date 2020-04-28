@@ -56,6 +56,7 @@ kotlin {
     configure(listOf(iosX64("ios"), iosArm64())) {
         binaries.framework {
             baseName = frameworkId
+            freeCompilerArgs = freeCompilerArgs + "-Xobjc-generics"
         }
     }
     sourceSets {
