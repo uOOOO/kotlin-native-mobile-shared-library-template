@@ -18,6 +18,7 @@ plugins {
     id("kotlin-multiplatform")
     id("com.android.library")
     id("kotlin-android-extensions")
+    id("kotlinx-serialization")
     id("maven-publish")
     id("com.squareup.sqldelight")
 }
@@ -64,6 +65,7 @@ kotlin {
             implementation(kotlin("stdlib-common"))
             // ktor
             implementation("io.ktor:ktor-client-core:${Version.ktor}")
+            implementation("io.ktor:ktor-client-serialization:${Version.ktor}")
             // kodein
             implementation("org.kodein.di:kodein-di-erased:${Version.kodein}")
             // sqldelight
@@ -86,6 +88,7 @@ kotlin {
             implementation("androidx.core:core-ktx:${Version.coreKtx}")
             // ktor
             implementation("io.ktor:ktor-client-android:${Version.ktor}")
+            implementation("io.ktor:ktor-client-serialization-jvm:${Version.ktor}")
             // kodein
             implementation("org.kodein.di:kodein-di-conf:${Version.kodein}")
             // sqldelight
@@ -100,6 +103,7 @@ kotlin {
             dependencies {
                 // ktor
                 implementation("io.ktor:ktor-client-ios:${Version.ktor}")
+                implementation("io.ktor:ktor-client-serialization-native:${Version.ktor}")
                 // sqldelight
                 implementation("com.squareup.sqldelight:native-driver:${Version.sqlDelight}")
             }
