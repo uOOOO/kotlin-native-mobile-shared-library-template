@@ -156,6 +156,7 @@ afterEvaluate {
 //        .filter { it.name != "kotlinMultiplatform" }
         .map { it as MavenPublication }
         .forEach { it.artifactId = it.artifactId.replace(project.name, artifactId).toLowerCase() }
+    tasks.getByName("allTests").dependsOn(tasks.getByName("testReleaseUnitTest"))
 }
 
 tasks.withType(KotlinCompile::class).all {
