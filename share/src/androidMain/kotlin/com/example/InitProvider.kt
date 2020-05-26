@@ -2,24 +2,16 @@ package com.example
 
 import android.content.ContentProvider
 import android.content.ContentValues
-import android.content.Context
 import android.database.Cursor
 import android.net.Uri
-import org.kodein.di.Kodein
-import org.kodein.di.conf.global
-import org.kodein.di.erased.bind
-import org.kodein.di.erased.singleton
+import org.koin.dsl.module
 
 class InitProvider : ContentProvider() {
     override fun onCreate(): Boolean {
-        initKodein(context)
+        initKoin().apply {
+            modules(module { single { context!! } })
+        }
         return true
-    }
-
-    private fun initKodein(context: Context) {
-        Kodein.global.addImport(Kodein.Module(Context::class.java.name) {
-            bind<Context>() with singleton { context }
-        })
     }
 
     override fun query(

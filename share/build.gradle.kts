@@ -21,6 +21,7 @@ plugins {
     id("kotlinx-serialization")
     id("maven-publish")
     id("com.squareup.sqldelight")
+    id("koin")
 }
 
 android {
@@ -63,21 +64,25 @@ kotlin {
     sourceSets {
         getByName("commonMain").dependencies {
             implementation(kotlin("stdlib-common"))
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:${Version.kotlinSerialization}")
             // ktor
             implementation("io.ktor:ktor-client-core:${Version.ktor}")
             implementation("io.ktor:ktor-client-serialization:${Version.ktor}")
-            // kodein
-            implementation("org.kodein.di:kodein-di-erased:${Version.kodein}")
+            implementation("io.ktor:ktor-client-logging:${Version.ktor}")
+            // koin
+            implementation("org.koin:koin-core:${Version.koin}")
             // sqldelight
             implementation("com.squareup.sqldelight:runtime:${Version.sqlDelight}")
             implementation("com.squareup.sqldelight:coroutines-extensions:${Version.sqlDelight}")
             // reaktive
-            implementation("com.badoo.reaktive:reaktive:${Version.reaktive}")
-            implementation("com.badoo.reaktive:coroutines-interop:${Version.reaktive}")
+            api("com.badoo.reaktive:reaktive:${Version.reaktive}")
+            api("com.badoo.reaktive:coroutines-interop:${Version.reaktive}")
         }
         getByName("commonTest").dependencies {
             implementation(kotlin("test-common"))
             implementation(kotlin("test-annotations-common"))
+            // koin
+            implementation("org.koin:koin-test:${Version.koin}")
             // reaktive
             implementation("com.badoo.reaktive:reaktive-testing:${Version.reaktive}")
         }
@@ -89,8 +94,7 @@ kotlin {
             // ktor
             implementation("io.ktor:ktor-client-android:${Version.ktor}")
             implementation("io.ktor:ktor-client-serialization-jvm:${Version.ktor}")
-            // kodein
-            implementation("org.kodein.di:kodein-di-conf:${Version.kodein}")
+            implementation("io.ktor:ktor-client-logging-jvm:${Version.ktor}")
             // sqldelight
             implementation("com.squareup.sqldelight:android-driver:${Version.sqlDelight}")
             implementation("com.squareup.sqldelight:android-paging-extensions:${Version.sqlDelight}")
@@ -104,6 +108,7 @@ kotlin {
                 // ktor
                 implementation("io.ktor:ktor-client-ios:${Version.ktor}")
                 implementation("io.ktor:ktor-client-serialization-native:${Version.ktor}")
+                implementation("io.ktor:ktor-client-logging-native:${Version.ktor}")
                 // sqldelight
                 implementation("com.squareup.sqldelight:native-driver:${Version.sqlDelight}")
             }
@@ -168,7 +173,7 @@ tasks.withType(KotlinCompile::class).all {
 // https://cashapp.github.io/sqldelight/gradle/
 sqldelight {
     database("ThisDatabase") {
-        packageName = "${group}.db"
+        packageName = "com.example.db"
         sourceFolders = listOf("sqldelight")
         schemaOutputDirectory = file("$buildDir/sqldelight")
     }
