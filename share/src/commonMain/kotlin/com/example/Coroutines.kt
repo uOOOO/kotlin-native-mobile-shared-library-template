@@ -6,7 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
-internal suspend inline fun <T, R> T.launchCoroutine(
+internal suspend inline fun <T, R> T.async(
     context: CoroutineContext = Dispatchers.Default,
     crossinline block: T.() -> R
 ): R {

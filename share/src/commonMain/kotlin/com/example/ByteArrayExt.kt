@@ -1,9 +1,14 @@
 package com.example
 
-import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.KSerializer
 
 @ExperimentalStdlibApi
-internal fun <T> ByteArray.parse(deserializer: DeserializationStrategy<T>): T {
+internal suspend fun <T> ByteArray.parseAsync(deserializer: KSerializer<T>): T {
+    return async { jsonParser().parse(deserializer, decodeToString()) }
+}
+
+@ExperimentalStdlibApi
+internal fun <T> ByteArray.parse(deserializer: KSerializer<T>): T {
     return jsonParser().parse(deserializer, decodeToString())
 }
 
