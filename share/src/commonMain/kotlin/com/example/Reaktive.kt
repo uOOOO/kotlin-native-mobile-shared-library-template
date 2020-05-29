@@ -39,10 +39,18 @@ internal fun completableFromCoroutineUnsafe(
     }
 
 // Wrapping Reaktive to RxSwift in Swift
+//struct KError : Error {
+//    let throwable: KotlinThrowable
+//
+//    init(throwable: KotlinThrowable) {
+//        self.throwable = throwable
+//    }
+//}
+//
 //func toRxSingle<T>(_ single: ReaktiveSingleWrapper<T>) -> Single<T> {
 //    return Single<T>.create { observer -> Disposable in
 //            let disposable = single.subscribe(isThreadLocal: true, onSubscribe: nil, onError: { (kotlinThrowable) in
-//            observer(.error(NSError()))
+//            observer(.error(KError(throwable: kotlinThrowable)))
 //    }) { (value) in
 //            observer(.success(value!))
 //    }
