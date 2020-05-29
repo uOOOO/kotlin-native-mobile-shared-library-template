@@ -3,13 +3,13 @@ package com.example
 import kotlinx.serialization.KSerializer
 
 @ExperimentalStdlibApi
-internal suspend fun <T> ByteArray.parseAsync(deserializer: KSerializer<T>): T {
-    return async { jsonParser().parse(deserializer, decodeToString()) }
+internal suspend fun <T> String.parseAsync(deserializer: KSerializer<T>): T {
+    return async { jsonParser().parse(deserializer, this) }
 }
 
 @ExperimentalStdlibApi
-internal fun <T> ByteArray.parse(deserializer: KSerializer<T>): T {
-    return jsonParser().parse(deserializer, decodeToString())
+internal fun <T> String.parse(deserializer: KSerializer<T>): T {
+    return jsonParser().parse(deserializer, this)
 }
 
 //@ExperimentalStdlibApi
