@@ -9,7 +9,6 @@ import io.ktor.client.features.logging.LogLevel
 import io.ktor.client.features.logging.Logger
 import io.ktor.client.features.logging.Logging
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -39,12 +38,9 @@ private val defaultModule = module {
     single { ThisDatabase(get()) }
 }
 
-internal fun jsonParser() = Json(
-    JsonConfiguration.Stable.copy(
-        ignoreUnknownKeys = true,
-        isLenient = true,
-        unquotedPrint = false
-    )
-)
+internal fun jsonParser() = Json {
+    ignoreUnknownKeys = true
+    isLenient = true
+}
 
 internal expect val platformModule: Module

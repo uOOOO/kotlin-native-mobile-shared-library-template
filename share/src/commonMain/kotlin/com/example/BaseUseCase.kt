@@ -20,7 +20,7 @@ open class BaseUseCase {
 //    }
 
     @ExperimentalStdlibApi
-    internal inline fun <T> execute(
+    internal inline fun <T : Any> execute(
         context: CoroutineContext,
         crossinline block: suspend CoroutineScope.() -> T
     ): SingleWrapper<T> {

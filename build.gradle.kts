@@ -2,28 +2,24 @@
 
 buildscript {
     repositories {
+        gradlePluginPortal()
         google()
-        jcenter()
         mavenCentral()
-        maven(url = "https://dl.bintray.com/kotlin/kotlin-dev")
+        jcenter()
     }
     dependencies {
         classpath("com.android.tools.build:gradle:${Version.agp}")
-        classpath("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:${Version.kotlin}")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Version.kotlin}")
         classpath("org.jetbrains.kotlin:kotlin-serialization:${Version.kotlin}")
         classpath("com.squareup.sqldelight:gradle-plugin:${Version.sqlDelight}")
-        classpath("org.koin:koin-gradle-plugin:${Version.koin}")
     }
 }
 
 allprojects {
     repositories {
         google()
-        jcenter()
         mavenCentral()
-        maven(url = "https://dl.bintray.com/badoo/maven")
-        maven(url = "https://dl.bintray.com/ekito/koin")
+        jcenter()
     }
 }
 

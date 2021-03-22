@@ -15,13 +15,12 @@ val buildType by lazy {
 }
 
 plugins {
-    id("kotlin-multiplatform")
     id("com.android.library")
-    id("kotlin-android-extensions")
+    id("kotlin-multiplatform")
+    id("kotlin-parcelize")
     id("kotlinx-serialization")
     id("maven-publish")
     id("com.squareup.sqldelight")
-    id("koin")
 }
 
 android {
@@ -37,11 +36,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-    sourceSets {
-        getByName("main") {
-            manifest.srcFile("src/androidMain/AndroidManifest.xml")
-        }
-    }
+    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -55,64 +50,67 @@ kotlin {
     android {
         publishLibraryVariants("debug", "release")
     }
-    configure(listOf(iosX64("ios"), iosArm64())) {
+    ios {
         binaries.framework {
             baseName = frameworkId
-            freeCompilerArgs = freeCompilerArgs + "-Xobjc-generics"
         }
     }
     sourceSets {
-        getByName("commonMain").dependencies {
-            implementation(kotlin("stdlib-common"))
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:${Version.kotlinSerialization}")
-            // ktor
-            implementation("io.ktor:ktor-client-core:${Version.ktor}")
-            implementation("io.ktor:ktor-client-serialization:${Version.ktor}")
-            implementation("io.ktor:ktor-client-logging:${Version.ktor}")
-            // koin
-            implementation("org.koin:koin-core:${Version.koin}")
-            // sqldelight
-            implementation("com.squareup.sqldelight:runtime:${Version.sqlDelight}")
-            implementation("com.squareup.sqldelight:coroutines-extensions:${Version.sqlDelight}")
-            // reaktive
-            api("com.badoo.reaktive:reaktive:${Version.reaktive}")
-            api("com.badoo.reaktive:coroutines-interop:${Version.reaktive}")
+        val commonMain by getting {
+            dependencies {
+                implementation(kotlin("stdlib-common"))
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Version.kotlinSerialization}")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Version.kotlinCoroutines}")
+                // ktor
+                implementation("io.ktor:ktor-client-core:${Version.ktor}")
+                implementation("io.ktor:ktor-client-serialization:${Version.ktor}")
+                implementation("io.ktor:ktor-client-logging:${Version.ktor}")
+                // koin
+                implementation("io.insert-koin:koin-core:${Version.koin}")
+                // sqldelight
+                implementation("com.squareup.sqldelight:coroutines-extensions:${Version.sqlDelight}")
+                // reaktive
+                api("com.badoo.reaktive:reaktive:${Version.reaktive}")
+                api("com.badoo.reaktive:reaktive-annotations:${Version.reaktive}")
+                api("com.badoo.reaktive:coroutines-interop:${Version.reaktive}")
+            }
         }
-        getByName("commonTest").dependencies {
-            implementation(kotlin("test-common"))
-            implementation(kotlin("test-annotations-common"))
-            // koin
-            implementation("org.koin:koin-test:${Version.koin}")
-            // reaktive
-            implementation("com.badoo.reaktive:reaktive-testing:${Version.reaktive}")
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test-common"))
+                implementation(kotlin("test-annotations-common"))
+                // koin
+                implementation("io.insert-koin:koin-test:${Version.koin}")
+                // reaktive
+                implementation("com.badoo.reaktive:reaktive-testing:${Version.reaktive}")
+            }
         }
-        getByName("androidMain").dependencies {
-            implementation(kotlin("stdlib"))
-            // android
-            implementation("androidx.appcompat:appcompat:${Version.appcompat}")
-            implementation("androidx.core:core-ktx:${Version.coreKtx}")
-            // ktor
-            implementation("io.ktor:ktor-client-android:${Version.ktor}")
-            implementation("io.ktor:ktor-client-serialization-jvm:${Version.ktor}")
-            implementation("io.ktor:ktor-client-logging-jvm:${Version.ktor}")
-            // sqldelight
-            implementation("com.squareup.sqldelight:android-driver:${Version.sqlDelight}")
-            implementation("com.squareup.sqldelight:android-paging-extensions:${Version.sqlDelight}")
+        val androidMain by getting {
+            dependencies {
+                implementation(kotlin("stdlib"))
+                // android
+                implementation("androidx.appcompat:appcompat:${Version.appcompat}")
+                implementation("androidx.core:core-ktx:${Version.coreKtx}")
+                // ktor
+                implementation("io.ktor:ktor-client-android:${Version.ktor}")
+                // sqldelight
+                implementation("com.squareup.sqldelight:android-driver:${Version.sqlDelight}")
+                implementation("com.squareup.sqldelight:android-paging-extensions:${Version.sqlDelight}")
+            }
         }
-        getByName("androidTest").dependencies {
-            implementation(kotlin("test"))
-            implementation(kotlin("test-junit"))
+        val androidTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(kotlin("test-junit"))
+            }
         }
-        getByName("iosMain") {
+        val iosMain by getting {
             dependencies {
                 // ktor
                 implementation("io.ktor:ktor-client-ios:${Version.ktor}")
-                implementation("io.ktor:ktor-client-serialization-native:${Version.ktor}")
-                implementation("io.ktor:ktor-client-logging-native:${Version.ktor}")
                 // sqldelight
                 implementation("com.squareup.sqldelight:native-driver:${Version.sqlDelight}")
             }
-            getByName("iosArm64Main").dependsOn(this)
         }
     }
 }
@@ -140,21 +138,21 @@ tasks.register("iosTestOnSim") {
     }
 }
 
+//tasks.findByName("iosTest")?.finalizedBy(tasks.findByName("iosTestOnSim"))
+
 // Create a task building a fat framework.
 tasks.register("linkFatFrameworkIos", FatFrameworkTask::class) {
     // The fat framework must have the same base name as the initial frameworks.
     baseName = frameworkId
 
-// The default destination directory is '<build directory>/bin/iosFat'.
+    // The default destination directory is '<build directory>/bin/iosFat'.
     destinationDir = file("$buildDir/bin/iosFat/${buildType}Framework")
 
-// Specify the frameworks to be merged.
+    // Specify the frameworks to be merged.
     from(kotlin.targets.filter { it.name.startsWith("ios") }
         .map { it as KotlinNativeTarget }
         .map { it.binaries.getFramework(buildType) })
 }
-
-//tasks.findByName("iosTest")?.finalizedBy(tasks.findByName("iosTestOnSim"))
 
 afterEvaluate {
     publishing.publications
@@ -167,6 +165,7 @@ afterEvaluate {
 tasks.withType(KotlinCompile::class).all {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8.toString() // "1.8"
+        useIR = true
     }
 }
 
@@ -174,7 +173,5 @@ tasks.withType(KotlinCompile::class).all {
 sqldelight {
     database("ThisDatabase") {
         packageName = "com.example.db"
-        sourceFolders = listOf("sqldelight")
-        schemaOutputDirectory = file("$buildDir/sqldelight")
     }
 }
