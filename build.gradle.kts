@@ -5,12 +5,11 @@ buildscript {
         gradlePluginPortal()
         google()
         mavenCentral()
-        jcenter()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:${Version.agp}")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Version.kotlin}")
         classpath("org.jetbrains.kotlin:kotlin-serialization:${Version.kotlin}")
+        classpath("com.android.tools.build:gradle:${Version.agp}")
         classpath("com.squareup.sqldelight:gradle-plugin:${Version.sqlDelight}")
     }
 }
@@ -19,7 +18,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        jcenter()
     }
 }
 

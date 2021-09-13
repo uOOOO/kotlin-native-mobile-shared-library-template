@@ -8,7 +8,6 @@ open class BaseUseCase {
 //    /**
 //     * For heavy response
 //     */
-//    @ExperimentalStdlibApi
 //    internal inline fun <T> execute(
 //        context: CoroutineContext,
 //        deserializer: DeserializationStrategy<T>,
@@ -19,7 +18,6 @@ open class BaseUseCase {
 //            .wrap()
 //    }
 
-    @ExperimentalStdlibApi
     internal inline fun <T : Any> execute(
         context: CoroutineContext,
         crossinline block: suspend CoroutineScope.() -> T

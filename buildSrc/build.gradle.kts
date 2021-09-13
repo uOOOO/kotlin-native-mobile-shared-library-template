@@ -3,10 +3,7 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    gradlePluginPortal()
+    google()
     mavenCentral()
-}
-
-kotlinDslPluginOptions {
-    experimentalWarning.set(false)
 }

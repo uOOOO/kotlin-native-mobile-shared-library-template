@@ -1,6 +1,4 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.gradle.tasks.FatFrameworkTask
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = property("groupId") as String
 version = property("version") as String
@@ -15,50 +13,35 @@ val buildType by lazy {
 }
 
 plugins {
+    kotlin("multiplatform")
+    kotlin("native.cocoapods")
     id("com.android.library")
-    id("kotlin-multiplatform")
-    id("kotlin-parcelize")
-    id("kotlinx-serialization")
-    id("maven-publish")
+    kotlin("plugin.serialization")
+    kotlin("plugin.parcelize")
     id("com.squareup.sqldelight")
-}
-
-android {
-    compileSdkVersion(Version.Android.compileSdkVersion)
-    defaultConfig {
-        minSdkVersion(Version.Android.minSdkVersion)
-        targetSdkVersion(Version.Android.targetSdkVersion)
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    packagingOptions {
-        exclude("META-INF/ktor-http.kotlin_module")
-    }
+    id("maven-publish")
 }
 
 kotlin {
-    android {
-        publishLibraryVariants("debug", "release")
+    android { publishLibraryVariants("debug", "release") }
+
+    val iosTarget: (String, KotlinNativeTarget.() -> Unit) -> KotlinNativeTarget =
+        if (System.getenv("SDK_NAME")?.startsWith("iphoneos") == true)
+            ::iosArm64
+        else
+            ::iosX64
+
+    iosTarget("ios") {}
+
+    cocoapods {
+        summary = "Kotlin native mobile shared library"
+        ios.deploymentTarget = "13.0"
+        frameworkName = "shared"
     }
-    ios {
-        binaries.framework {
-            baseName = frameworkId
-        }
-    }
+
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(kotlin("stdlib-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Version.kotlinSerialization}")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Version.kotlinCoroutines}")
                 // ktor
@@ -100,17 +83,45 @@ kotlin {
         }
         val androidTest by getting {
             dependencies {
-                implementation(kotlin("test"))
                 implementation(kotlin("test-junit"))
+                implementation("junit:junit:${Version.junit}")
             }
         }
         val iosMain by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Version.kotlinCoroutines}") {
+                    version {
+                        strictly(Version.kotlinCoroutines)
+                    }
+                }
                 // ktor
                 implementation("io.ktor:ktor-client-ios:${Version.ktor}")
                 // sqldelight
                 implementation("com.squareup.sqldelight:native-driver:${Version.sqlDelight}")
             }
+        }
+    }
+
+    // https://kotlinlang.org/docs/whatsnew1520.html#opt-in-export-of-kdoc-comments-to-generated-objective-c-headers
+    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget> {
+        compilations["main"].kotlinOptions.freeCompilerArgs += "-Xexport-kdoc"
+    }
+}
+
+android {
+    compileSdk = Version.Android.compileSdkVersion
+    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+    defaultConfig {
+        minSdk = Version.Android.minSdkVersion
+        targetSdk = Version.Android.targetSdkVersion
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            )
         }
     }
 }
@@ -138,36 +149,7 @@ tasks.register("iosTestOnSim") {
     }
 }
 
-//tasks.findByName("iosTest")?.finalizedBy(tasks.findByName("iosTestOnSim"))
-
-// Create a task building a fat framework.
-tasks.register("linkFatFrameworkIos", FatFrameworkTask::class) {
-    // The fat framework must have the same base name as the initial frameworks.
-    baseName = frameworkId
-
-    // The default destination directory is '<build directory>/bin/iosFat'.
-    destinationDir = file("$buildDir/bin/iosFat/${buildType}Framework")
-
-    // Specify the frameworks to be merged.
-    from(kotlin.targets.filter { it.name.startsWith("ios") }
-        .map { it as KotlinNativeTarget }
-        .map { it.binaries.getFramework(buildType) })
-}
-
-afterEvaluate {
-    publishing.publications
-//        .filter { it.name != "kotlinMultiplatform" }
-        .map { it as MavenPublication }
-        .forEach { it.artifactId = it.artifactId.replace(project.name, artifactId).toLowerCase() }
-    tasks.getByName("allTests").dependsOn(tasks.getByName("testReleaseUnitTest"))
-}
-
-tasks.withType(KotlinCompile::class).all {
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString() // "1.8"
-        useIR = true
-    }
-}
+tasks.findByName("check")?.finalizedBy(tasks.findByName("iosTestOnSim"))
 
 // https://cashapp.github.io/sqldelight/gradle/
 sqldelight {
