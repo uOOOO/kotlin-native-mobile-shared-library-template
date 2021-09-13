@@ -1,5 +1,5 @@
 Pod::Spec.new do |spec|
-    spec.name                     = 'share'
+    spec.name                     = 'shared'
     spec.version                  = '0.0.1'
     spec.homepage                 = ''
     spec.source                   = { :git => "Not Published", :tag => "Cocoapods/#{spec.name}/#{spec.version}" }
@@ -16,13 +16,13 @@ Pod::Spec.new do |spec|
                 
 
     spec.pod_target_xcconfig = {
-        'KOTLIN_PROJECT_PATH' => ':share',
-        'PRODUCT_MODULE_NAME' => 'share',
+        'KOTLIN_PROJECT_PATH' => ':shared',
+        'PRODUCT_MODULE_NAME' => 'shared',
     }
 
     spec.script_phases = [
         {
-            :name => 'Build share',
+            :name => 'Build shared',
             :execution_position => :before_compile,
             :shell_path => '/bin/sh',
             :script => <<-SCRIPT
